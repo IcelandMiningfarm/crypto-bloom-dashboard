@@ -391,7 +391,7 @@ const MiningPlans = () => {
           <TabsContent value="usdt">
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
               {usdtPlans.map((plan, i) => (
-                <PlanCard key={plan.name} plan={plan} type="USDT" index={i} />
+                <PlanCard key={plan.name} plan={plan} type="USDT" index={i} onBuy={handleBuy} />
               ))}
             </div>
           </TabsContent>

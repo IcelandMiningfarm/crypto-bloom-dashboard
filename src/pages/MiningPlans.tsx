@@ -249,9 +249,10 @@ interface PlanCardProps {
   plan: { name: string; price: number; duration: string; details: { label: string; value: string; link?: boolean }[] };
   type: "BTC" | "USDT";
   index: number;
+  onBuy: (plan: PlanCardProps["plan"], type: "BTC" | "USDT") => void;
 }
 
-const PlanCard = ({ plan, type, index }: PlanCardProps) => (
+const PlanCard = ({ plan, type, index, onBuy }: PlanCardProps) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -291,7 +292,10 @@ const PlanCard = ({ plan, type, index }: PlanCardProps) => (
 
     {/* Buy Button */}
     <div className="p-4 pt-0">
-      <Button className="w-full gradient-primary text-primary-foreground glow-primary">
+      <Button
+        onClick={() => onBuy(plan, type)}
+        className="w-full gradient-primary text-primary-foreground glow-primary"
+      >
         Buy Now
       </Button>
     </div>

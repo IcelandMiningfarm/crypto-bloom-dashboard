@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface MiningStats {
   btcBalance: number;
@@ -27,7 +27,22 @@ interface ChartPoint {
 const randomDelta = (base: number, pct: number) =>
   base * (1 + (Math.random() - 0.5) * 2 * pct);
 
+const fetchBtcPrice = async (): Promise<number | null> => {
+  try {
+    const res = await fetch(
+      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.bitcoin?.usd ?? null;
+  } catch {
+    return null;
+  }
+};
+
 export const useLiveMiningData = () => {
+  const btcPriceRef = useRef(63000);
+
   const [stats, setStats] = useState<MiningStats>({
     btcBalance: 0.04521,
     usdValue: 2847.32,
@@ -62,10 +77,21 @@ export const useLiveMiningData = () => {
   const [isConnected, setIsConnected] = useState(false);
   const tickRef = useRef(0);
 
-  // Simulate WebSocket connection
+  // Fetch real BTC price on mount and every 60s
   useEffect(() => {
-    const connectDelay = setTimeout(() => setIsConnected(true), 800);
-    return () => clearTimeout(connectDelay);
+    const load = async () => {
+      const price = await fetchBtcPrice();
+      if (price) btcPriceRef.current = price;
+      setIsConnected(true);
+    };
+    load();
+
+    const interval = setInterval(async () => {
+      const price = await fetchBtcPrice();
+      if (price) btcPriceRef.current = price;
+    }, 60000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Live stat updates every 3s
@@ -79,7 +105,7 @@ export const useLiveMiningData = () => {
       setStats((prev) => {
         const reward = +(Math.random() * 0.00005 + 0.00005).toFixed(6);
         const newBtc = +(prev.btcBalance + reward).toFixed(6);
-        const btcPrice = randomDelta(63000, 0.005);
+        const btcPrice = btcPriceRef.current;
         const newUsd = +(newBtc * btcPrice).toFixed(2);
         const newPower = +randomDelta(prev.miningPower, 0.02).toFixed(1);
         const newEarnings = +randomDelta(prev.dailyEarnings, 0.05).toFixed(6);

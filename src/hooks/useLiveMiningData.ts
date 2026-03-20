@@ -85,15 +85,21 @@ export const useLiveMiningData = () => {
   // Fetch real BTC price on mount and every 60s
   useEffect(() => {
     const load = async () => {
-      const price = await fetchBtcPrice();
-      if (price) btcPriceRef.current = price;
+      const data = await fetchBtcPrice();
+      if (data) {
+        btcPriceRef.current = data.price;
+        setBtcPrice(data);
+      }
       setIsConnected(true);
     };
     load();
 
     const interval = setInterval(async () => {
-      const price = await fetchBtcPrice();
-      if (price) btcPriceRef.current = price;
+      const data = await fetchBtcPrice();
+      if (data) {
+        btcPriceRef.current = data.price;
+        setBtcPrice(data);
+      }
     }, 60000);
 
     return () => clearInterval(interval);

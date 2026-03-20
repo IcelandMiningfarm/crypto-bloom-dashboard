@@ -73,12 +73,32 @@ const Dashboard = () => {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
             <p className="text-muted-foreground text-sm mt-1">Welcome back, Miner</p>
           </div>
-          <LiveIndicator connected={isConnected} />
+          <div className="flex items-center gap-4">
+            {/* BTC Price Ticker */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="glass-card px-4 py-2 flex items-center gap-3"
+            >
+              <Bitcoin className="h-5 w-5 text-accent" />
+              <div className="flex flex-col">
+                <span className="text-xs text-muted-foreground">BTC/USD</span>
+                <span className="text-foreground font-bold font-mono tabular-nums text-sm">
+                  ${btcPrice.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+              </div>
+              <div className={`flex items-center text-xs font-mono ${pricePositive ? 'text-primary' : 'text-destructive'}`}>
+                {pricePositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                {Math.abs(btcPrice.change24h).toFixed(2)}%
+              </div>
+            </motion.div>
+            <LiveIndicator connected={isConnected} />
+          </div>
         </div>
 
         {/* Stats Grid */}

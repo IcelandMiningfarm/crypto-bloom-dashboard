@@ -47,7 +47,8 @@ const iconMap = {
 };
 
 const Dashboard = () => {
-  const { stats, activity, chartData, isConnected } = useLiveMiningData();
+  const { stats, activity, chartData, isConnected, btcPrice } = useLiveMiningData();
+  const pricePositive = btcPrice.change24h >= 0;
 
   const statCards = [
     {

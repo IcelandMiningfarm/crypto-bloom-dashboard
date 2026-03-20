@@ -27,14 +27,18 @@ interface ChartPoint {
 const randomDelta = (base: number, pct: number) =>
   base * (1 + (Math.random() - 0.5) * 2 * pct);
 
-const fetchBtcPrice = async (): Promise<number | null> => {
+const fetchBtcPrice = async (): Promise<{ price: number; change24h: number } | null> => {
   try {
     const res = await fetch(
-      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
+      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true",
+      { headers: { "x-cg-demo-api-key": "CG-9kLivg9HmUeX7VwDSgehcpLj" } }
     );
     if (!res.ok) return null;
     const data = await res.json();
-    return data.bitcoin?.usd ?? null;
+    return {
+      price: data.bitcoin?.usd ?? 0,
+      change24h: data.bitcoin?.usd_24h_change ?? 0,
+    };
   } catch {
     return null;
   }
@@ -75,20 +79,27 @@ export const useLiveMiningData = () => {
   });
 
   const [isConnected, setIsConnected] = useState(false);
+  const [btcPrice, setBtcPrice] = useState({ price: 0, change24h: 0 });
   const tickRef = useRef(0);
 
   // Fetch real BTC price on mount and every 60s
   useEffect(() => {
     const load = async () => {
-      const price = await fetchBtcPrice();
-      if (price) btcPriceRef.current = price;
+      const data = await fetchBtcPrice();
+      if (data) {
+        btcPriceRef.current = data.price;
+        setBtcPrice(data);
+      }
       setIsConnected(true);
     };
     load();
 
     const interval = setInterval(async () => {
-      const price = await fetchBtcPrice();
-      if (price) btcPriceRef.current = price;
+      const data = await fetchBtcPrice();
+      if (data) {
+        btcPriceRef.current = data.price;
+        setBtcPrice(data);
+      }
     }, 60000);
 
     return () => clearInterval(interval);
@@ -155,7 +166,7 @@ export const useLiveMiningData = () => {
     return () => clearInterval(interval);
   }, [isConnected]);
 
-  return { stats, activity, chartData, isConnected };
+  return { stats, activity, chartData, isConnected, btcPrice };
 };
 
 function ageTime(t: string): string {

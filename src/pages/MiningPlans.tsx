@@ -437,6 +437,79 @@ const MiningPlans = () => {
           </div>
         </div>
       </div>
+
+      {/* Purchase Confirmation Dialog */}
+      <Dialog open={!!selectedPlan} onOpenChange={(open) => !open && setSelectedPlan(null)}>
+        <DialogContent className="bg-card border-border max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-foreground text-lg">Confirm Purchase</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Review your mining contract details before proceeding to payment.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedPlan && (
+            <div className="space-y-4 py-2">
+              {/* Plan summary */}
+              <div className="rounded-lg bg-secondary/50 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Plan</span>
+                  <span className="text-sm font-semibold text-foreground">{selectedPlan.plan.name}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Price</span>
+                  <span className="text-lg font-bold text-accent">
+                    ${selectedPlan.plan.price.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Duration</span>
+                  <span className="text-sm text-foreground">{selectedPlan.plan.duration}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Currency</span>
+                  <Badge className={selectedPlan.type === "BTC" ? "bg-accent text-accent-foreground" : "bg-primary text-primary-foreground"}>
+                    {selectedPlan.type}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Key details */}
+              <div className="space-y-2">
+                {selectedPlan.plan.details.slice(0, 4).map((d, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs">
+                    <Check className="h-3.5 w-3.5 text-accent shrink-0" />
+                    <span className="text-muted-foreground">{d.label}</span>
+                    {d.value && <span className="ml-auto text-foreground">{d.value}</span>}
+                  </div>
+                ))}
+              </div>
+
+              {/* Info badges */}
+              <div className="flex flex-wrap gap-2 pt-1">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary rounded-full px-3 py-1">
+                  <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Secure Payment
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary rounded-full px-3 py-1">
+                  <Clock className="h-3.5 w-3.5 text-primary" /> Instant Activation
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary rounded-full px-3 py-1">
+                  <Cpu className="h-3.5 w-3.5 text-primary" /> Antminer S21
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setSelectedPlan(null)} className="border-border">
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmPurchase} className="gradient-primary text-primary-foreground glow-primary">
+              Proceed to Payment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };

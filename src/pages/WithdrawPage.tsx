@@ -194,4 +194,4 @@ const WithdrawPage = () => {
   );
 };
 
-export default DepositPage;
+export default WithdrawPage;

@@ -245,7 +245,7 @@ const ActivityTicker = () => {
 
 // ── Plan Card ──────────────────────────────────────────────
 interface PlanCardProps {
-  plan: { name: string; price: number; duration: string; details: { label: string; value: string; link?: boolean }[] };
+  plan: { name: string; price: number; duration: string; durationDays: number; dailyEarning: number; details: { label: string; value: string; link?: boolean }[] };
   type: "BTC" | "USDT";
   index: number;
   onBuy: (plan: PlanCardProps["plan"], type: "BTC" | "USDT") => void;

@@ -22,7 +22,7 @@ const DepositPage = () => {
   useEffect(() => {
     const state = location.state as { planName?: string; planPrice?: number; planType?: string; planDuration?: string } | null;
     if (state?.planName) {
-      setSelectedCrypto(state.planType === "USDT" ? "USDT" : "BTC");
+      setSelectedCrypto(state.planType === "USDT" ? "USDT" : state.planType === "ETH" ? "ETH" : state.planType === "XRP" ? "XRP" : state.planType === "BNB" ? "BNB" : "BTC");
       setAmount(String(state.planPrice ?? ""));
       toast({
         title: `📋 ${state.planName} selected`,

@@ -14,7 +14,7 @@ const DepositPage = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
-  const [selectedCrypto, setSelectedCrypto] = useState<"BTC" | "USDT">("BTC");
+  const [selectedCrypto, setSelectedCrypto] = useState<"BTC" | "USDT" | "ETH" | "XRP" | "BNB">("BTC");
   const [amount, setAmount] = useState("");
   const [deposits, setDeposits] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);

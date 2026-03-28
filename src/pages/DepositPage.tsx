@@ -14,7 +14,7 @@ const DepositPage = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
-  const [selectedCrypto, setSelectedCrypto] = useState<"BTC" | "USDT">("BTC");
+  const [selectedCrypto, setSelectedCrypto] = useState<"BTC" | "USDT" | "ETH" | "XRP" | "BNB">("BTC");
   const [amount, setAmount] = useState("");
   const [deposits, setDeposits] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -22,7 +22,7 @@ const DepositPage = () => {
   useEffect(() => {
     const state = location.state as { planName?: string; planPrice?: number; planType?: string; planDuration?: string } | null;
     if (state?.planName) {
-      setSelectedCrypto(state.planType === "USDT" ? "USDT" : "BTC");
+      setSelectedCrypto(state.planType === "USDT" ? "USDT" : state.planType === "ETH" ? "ETH" : state.planType === "XRP" ? "XRP" : state.planType === "BNB" ? "BNB" : "BTC");
       setAmount(String(state.planPrice ?? ""));
       toast({
         title: `📋 ${state.planName} selected`,
@@ -47,8 +47,19 @@ const DepositPage = () => {
   }, [user]);
 
   const walletAddresses = {
-    BTC: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
-    USDT: "TN3kS7dVqH9KvW3P8ZxmQ5rFg2Yt1nKp7a",
+    BTC: "bc1qgwcsk7ejyq3u5747xa9r49lyn3a3dpk7e2xx26",
+    USDT: "TSThbFbqfViVxNSg9cnQ6taqSghH8p6kyc",
+    ETH: "0x88fd1a2E86C723f522d2e47BB725b4633A12cf20",
+    XRP: "rE5apkmMAn1WC5UEoVScT6kATnocbSqEzu",
+    BNB: "0x88fd1a2E86C723f522d2e47BB725b4633A12cf20",
+  };
+
+  const networkLabels: Record<string, string> = {
+    BTC: "Bitcoin",
+    USDT: "TRC20 (Tron)",
+    ETH: "Ethereum",
+    XRP: "XRP Ledger",
+    BNB: "BNB Smart Chain",
   };
 
   const handleCopy = () => {
@@ -95,12 +106,12 @@ const DepositPage = () => {
         <div className="grid lg:grid-cols-2 gap-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-6">
             <h3 className="text-foreground font-semibold mb-4">Select Currency</h3>
-            <div className="flex gap-3 mb-6">
-              {(["BTC", "USDT"] as const).map((crypto) => (
+            <div className="flex flex-wrap gap-2 mb-6">
+              {(["BTC", "USDT", "ETH", "XRP", "BNB"] as const).map((crypto) => (
                 <button
                   key={crypto}
                   onClick={() => setSelectedCrypto(crypto)}
-                  className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-all ${
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
                     selectedCrypto === crypto
                       ? "gradient-primary text-primary-foreground glow-primary"
                       : "bg-secondary text-muted-foreground hover:text-foreground"
@@ -111,6 +122,7 @@ const DepositPage = () => {
               ))}
             </div>
 
+            <label className="text-sm text-muted-foreground mb-1 block">Network: <span className="text-foreground font-medium">{networkLabels[selectedCrypto]}</span></label>
             <label className="text-sm text-muted-foreground mb-2 block">Deposit Address</label>
             <div className="flex gap-2">
               <Input value={walletAddresses[selectedCrypto]} readOnly className="bg-secondary border-border font-mono text-xs" />

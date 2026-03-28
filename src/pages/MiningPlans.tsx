@@ -320,6 +320,8 @@ const MiningPlans = () => {
         planPrice: plan?.plan.price,
         planType: plan?.type,
         planDuration: plan?.plan.duration,
+        dailyEarning: plan?.plan.dailyEarning,
+        durationDays: plan?.plan.durationDays,
       },
     });
   };

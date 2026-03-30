@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
     // Get all active purchases that haven't expired
     const { data: activePurchases, error: fetchError } = await supabase
       .from("user_purchases")
-      .select("user_id, daily_earning")
+      .select("user_id, daily_earning, plan_name")
       .eq("status", "active")
       .gt("expires_at", new Date().toISOString());
 

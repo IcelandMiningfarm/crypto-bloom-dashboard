@@ -314,17 +314,56 @@ const MiningPlans = () => {
     setSelectedPlan({ plan, type });
   };
 
-  const handleConfirmPurchase = () => {
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const [purchasingFree, setPurchasingFree] = useState(false);
+
+  const handleConfirmPurchase = async () => {
     const plan = selectedPlan;
     setSelectedPlan(null);
+    if (!plan) return;
+
+    // Free plans: create purchase directly as active, no deposit needed
+    if (plan.plan.price === 0 && user) {
+      setPurchasingFree(true);
+      try {
+        const durationDays = plan.plan.durationDays;
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + durationDays);
+
+        const { error } = await supabase.from("user_purchases").insert({
+          user_id: user.id,
+          plan_name: plan.plan.name,
+          plan_price: 0,
+          plan_type: plan.type,
+          daily_earning: plan.plan.dailyEarning,
+          duration_days: durationDays,
+          expires_at: expiresAt.toISOString(),
+          status: "active",
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "✅ Free plan activated!",
+          description: `${plan.plan.name} is now active. Earnings will be credited daily.`,
+        });
+      } catch (err: any) {
+        toast({ title: "Error", description: err.message, variant: "destructive" });
+      } finally {
+        setPurchasingFree(false);
+      }
+      return;
+    }
+
     navigate("/deposit", {
       state: {
-        planName: plan?.plan.name,
-        planPrice: plan?.plan.price,
-        planType: plan?.type,
-        planDuration: plan?.plan.duration,
-        dailyEarning: plan?.plan.dailyEarning,
-        durationDays: plan?.plan.durationDays,
+        planName: plan.plan.name,
+        planPrice: plan.plan.price,
+        planType: plan.type,
+        planDuration: plan.plan.duration,
+        dailyEarning: plan.plan.dailyEarning,
+        durationDays: plan.plan.durationDays,
       },
     });
   };

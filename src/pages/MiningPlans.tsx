@@ -555,8 +555,8 @@ const MiningPlans = () => {
             <Button variant="outline" onClick={() => setSelectedPlan(null)} className="border-border">
               Cancel
             </Button>
-            <Button onClick={handleConfirmPurchase} className="gradient-primary text-primary-foreground glow-primary">
-              Proceed to Payment
+            <Button onClick={handleConfirmPurchase} disabled={purchasingFree} className="gradient-primary text-primary-foreground glow-primary">
+              {purchasingFree ? "Activating..." : selectedPlan?.plan.price === 0 ? "Activate Free Plan" : "Proceed to Payment"}
             </Button>
           </DialogFooter>
         </DialogContent>

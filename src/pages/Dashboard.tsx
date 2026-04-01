@@ -107,6 +107,9 @@ const Dashboard = () => {
               <div className="text-2xl font-bold text-foreground font-mono tabular-nums">
                 {stat.prefix}{stat.value.toFixed(stat.decimals)}{stat.suffix}
               </div>
+              {(stat as any).subValue && (
+                <p className="text-xs text-muted-foreground mt-1 font-mono">{(stat as any).subValue}</p>
+              )}
             </motion.div>
           ))}
         </div>

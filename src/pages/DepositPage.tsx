@@ -19,6 +19,8 @@ const DepositPage = () => {
   const [deposits, setDeposits] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [btcPrice, setBtcPrice] = useState(63000);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [lastDeposit, setLastDeposit] = useState<{ amount: number; currency: string; btcEquivalent: number } | null>(null);
 
   // Fetch live BTC price
   useEffect(() => {

@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Copy, Check, Clock, CheckCircle2 } from "lucide-react";
+import { Copy, Check, Clock, CheckCircle2, Receipt } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +20,8 @@ const DepositPage = () => {
   const [deposits, setDeposits] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [btcPrice, setBtcPrice] = useState(63000);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [lastDeposit, setLastDeposit] = useState<{ amount: number; currency: string; btcEquivalent: number } | null>(null);
 
   // Fetch live BTC price
   useEffect(() => {
@@ -127,9 +130,6 @@ const DepositPage = () => {
         });
       }
 
-      toast({ title: "Deposit submitted", description: "Your deposit is pending confirmation." });
-      setAmount("");
-      setPlanInfo(null);
       // Reload deposits
       const { data } = await supabase
         .from("deposits")
@@ -137,6 +137,10 @@ const DepositPage = () => {
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
       setDeposits(data ?? []);
+      setAmount("");
+      setPlanInfo(null);
+      setShowReceipt(true);
+      setLastDeposit({ amount: parseFloat(amount), currency: selectedCrypto, btcEquivalent: parseFloat(amount) / btcPrice });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
@@ -257,6 +261,51 @@ const DepositPage = () => {
           )}
         </motion.div>
       </div>
+
+      {/* Receipt Dialog */}
+      <Dialog open={showReceipt} onOpenChange={setShowReceipt}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Receipt className="h-5 w-5 text-primary" />
+              Deposit Receipt
+            </DialogTitle>
+            <DialogDescription>Your deposit has been submitted successfully</DialogDescription>
+          </DialogHeader>
+          {lastDeposit && (
+            <div className="space-y-4 py-2">
+              <div className="p-4 rounded-lg bg-primary/5 border border-primary/10 space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Amount</span>
+                  <span className="font-mono font-semibold text-foreground">${lastDeposit.amount.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">BTC Equivalent</span>
+                  <span className="font-mono text-accent">₿{lastDeposit.btcEquivalent.toFixed(8)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Currency</span>
+                  <span className="text-foreground">{lastDeposit.currency}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Status</span>
+                  <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent">
+                    <Clock className="h-3 w-3" /> Pending
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Date</span>
+                  <span className="text-foreground">{new Date().toLocaleString()}</span>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground text-center">Your deposit will be reviewed and approved by our team.</p>
+              <Button onClick={() => setShowReceipt(false)} className="w-full gradient-primary text-primary-foreground">
+                Done
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };

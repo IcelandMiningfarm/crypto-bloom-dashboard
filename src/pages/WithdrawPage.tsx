@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/DashboardLayout";
 
-const PENDING_HOURS = 72;
+const PENDING_HOURS = 24;
 
 const getTimeRemaining = (createdAt: string) => {
   const created = new Date(createdAt).getTime();
@@ -74,7 +74,7 @@ const WithdrawPage = () => {
         status: "pending",
       });
       if (error) throw error;
-      toast({ title: "Withdrawal requested", description: "Your withdrawal will be processed after 72 hours pending period." });
+      toast({ title: "Withdrawal requested", description: "Your withdrawal will be processed after 24 hours pending period." });
       setAmount("");
       setWalletAddress("");
       const { data } = await supabase
@@ -153,13 +153,13 @@ const WithdrawPage = () => {
               <div className="p-4 rounded-lg bg-accent/10 border border-accent/20">
                 <div className="flex items-center gap-1.5 mb-1">
                   <Timer className="h-3.5 w-3.5 text-accent" />
-                  <p className="text-sm text-foreground font-medium">72-Hour Pending Period</p>
+                  <p className="text-sm text-foreground font-medium">24-Hour Pending Period</p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">All withdrawals are held for 72 hours before being processed by admin for security purposes.</p>
+                <p className="text-xs text-muted-foreground mt-1">All withdrawals are held for 24 hours before being processed by admin for security purposes.</p>
               </div>
               <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
                 <p className="text-sm text-foreground font-medium">Processing Time</p>
-                <p className="text-xs text-muted-foreground mt-1">After the 72-hour pending period, withdrawals are processed within 24 hours after admin approval.</p>
+                <p className="text-xs text-muted-foreground mt-1">After the 24-hour pending period, withdrawals are processed within 24 hours after admin approval.</p>
               </div>
               <div className="p-4 rounded-lg bg-secondary/50">
                 <div className="flex items-center gap-1.5 mb-1">

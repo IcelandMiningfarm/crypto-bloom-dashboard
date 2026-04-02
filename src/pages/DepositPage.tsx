@@ -78,7 +78,42 @@ const DepositPage = () => {
       setDeposits(data ?? []);
     };
     load();
-  }, [user]);
+
+    // Realtime: listen for deposit approval/rejection
+    const channel = supabase
+      .channel('user-deposits')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'deposits',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const updated = payload.new as any;
+          // Reload the list
+          load();
+          if (updated.status === 'confirmed') {
+            const btcAmt = Number(updated.amount) / btcPrice;
+            setApprovedDeposit({
+              amount: Number(updated.amount),
+              currency: updated.currency,
+              btcEquivalent: btcAmt,
+              date: updated.created_at,
+            });
+            setShowApprovalReceipt(true);
+          } else if (updated.status === 'rejected') {
+            toast({ title: "Deposit Rejected", description: `Your $${updated.amount} deposit was rejected.`, variant: "destructive" });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, btcPrice]);
 
   const walletAddresses = {
     BTC: "bc1qgwcsk7ejyq3u5747xa9r49lyn3a3dpk7e2xx26",

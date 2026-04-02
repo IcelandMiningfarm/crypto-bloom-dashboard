@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/DashboardLayout";
 
-const PENDING_HOURS = 72;
+const PENDING_HOURS = 24;
 
 const getTimeRemaining = (createdAt: string) => {
   const created = new Date(createdAt).getTime();

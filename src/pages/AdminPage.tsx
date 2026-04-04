@@ -43,12 +43,14 @@ const AdminPage = () => {
       supabase.from("withdrawals").select("*").order("created_at", { ascending: false }),
       supabase.from("user_purchases").select("*").order("created_at", { ascending: false }),
       supabase.from("user_balances").select("*"),
+      supabase.from("referrals").select("*"),
     ]);
     setProfiles(p.data ?? []);
     setDeposits(d.data ?? []);
     setWithdrawals(w.data ?? []);
     setPurchases(pu.data ?? []);
     setBalances(b.data ?? []);
+    setReferrals(r.data ?? []);
     setLoading(false);
   };
 

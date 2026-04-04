@@ -150,8 +150,9 @@ const AdminPage = () => {
                     <th className="text-left py-3 font-medium">Username</th>
                     <th className="text-left py-3 font-medium">BTC Balance</th>
                     <th className="text-left py-3 font-medium">USDT Balance</th>
-                    <th className="text-left py-3 font-medium">Referral Code</th>
-                    <th className="text-left py-3 font-medium">Joined</th>
+                     <th className="text-left py-3 font-medium">Referral Code</th>
+                     <th className="text-left py-3 font-medium">Referrals</th>
+                     <th className="text-left py-3 font-medium">Joined</th>
                   </tr>
                 </thead>
                 <tbody>

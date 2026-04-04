@@ -87,8 +87,14 @@ export const useLiveMiningData = () => {
         .order("created_at", { ascending: false });
 
       const btcBal = balance?.btc_balance ?? 0;
+      const usdtBal = balance?.usdt_balance ?? 0;
       const activeP = purchases ?? [];
-      const totalDailyEarning = activeP.reduce((sum, p) => sum + (p.daily_earning || 0), 0);
+      const btcDailyEarning = activeP
+        .filter(p => (p.plan_type || "BTC").toUpperCase() !== "USDT")
+        .reduce((sum, p) => sum + (p.daily_earning || 0), 0);
+      const usdtDailyEarning = activeP
+        .filter(p => (p.plan_type || "BTC").toUpperCase() === "USDT")
+        .reduce((sum, p) => sum + (p.daily_earning || 0), 0);
       const totalMiningPower = activeP.length * 10; // 10 TH/s per active plan as base
 
       setActivePurchases(activeP);
@@ -98,9 +104,9 @@ export const useLiveMiningData = () => {
 
       setStats({
         btcBalance: btcBal,
-        usdValue: btcBal * btcPriceRef.current,
+        usdValue: btcBal * btcPriceRef.current + usdtBal,
         miningPower: totalMiningPower,
-        dailyEarnings: totalDailyEarning,
+        dailyEarnings: btcDailyEarning,
         activePlans: activeP.length,
       });
 
@@ -110,7 +116,7 @@ export const useLiveMiningData = () => {
         for (let i = 0; i < 30; i++) {
           data.push({
             day: `Day ${i + 1}`,
-            earnings: +(totalDailyEarning * (0.8 + Math.random() * 0.4)).toFixed(6),
+            earnings: +(btcDailyEarning * (0.8 + Math.random() * 0.4)).toFixed(6),
             hashrate: +(totalMiningPower * (0.9 + Math.random() * 0.2)).toFixed(1),
           });
         }

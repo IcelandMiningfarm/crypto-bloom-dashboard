@@ -32,23 +32,26 @@ const AdminPage = () => {
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
   const [purchases, setPurchases] = useState<any[]>([]);
   const [balances, setBalances] = useState<any[]>([]);
+  const [referrals, setReferrals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [btcPrice, setBtcPrice] = useState(63000);
 
   const loadAll = async () => {
     setLoading(true);
-    const [p, d, w, pu, b] = await Promise.all([
+    const [p, d, w, pu, b, r] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("deposits").select("*").order("created_at", { ascending: false }),
       supabase.from("withdrawals").select("*").order("created_at", { ascending: false }),
       supabase.from("user_purchases").select("*").order("created_at", { ascending: false }),
       supabase.from("user_balances").select("*"),
+      supabase.from("referrals").select("*"),
     ]);
     setProfiles(p.data ?? []);
     setDeposits(d.data ?? []);
     setWithdrawals(w.data ?? []);
     setPurchases(pu.data ?? []);
     setBalances(b.data ?? []);
+    setReferrals(r.data ?? []);
     setLoading(false);
   };
 
@@ -61,6 +64,7 @@ const AdminPage = () => {
 
   const getBalance = (userId: string) => balances.find((b) => b.user_id === userId);
   const getProfile = (userId: string) => profiles.find((p) => p.user_id === userId);
+  const getReferralCount = (userId: string) => referrals.filter((r) => r.referrer_id === userId).length;
 
   const approveDeposit = async (deposit: any) => {
     const { error } = await supabase.from("deposits").update({ status: "confirmed" }).eq("id", deposit.id);
@@ -146,8 +150,9 @@ const AdminPage = () => {
                     <th className="text-left py-3 font-medium">Username</th>
                     <th className="text-left py-3 font-medium">BTC Balance</th>
                     <th className="text-left py-3 font-medium">USDT Balance</th>
-                    <th className="text-left py-3 font-medium">Referral Code</th>
-                    <th className="text-left py-3 font-medium">Joined</th>
+                     <th className="text-left py-3 font-medium">Referral Code</th>
+                     <th className="text-left py-3 font-medium">Referrals</th>
+                     <th className="text-left py-3 font-medium">Joined</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -159,8 +164,9 @@ const AdminPage = () => {
                         <td className="py-3 text-muted-foreground">{p.username ?? "—"}</td>
                         <td className="py-3 font-mono text-accent">₿{bal?.btc_balance?.toFixed(6) ?? "0"}</td>
                         <td className="py-3 font-mono text-primary">${bal?.usdt_balance?.toFixed(2) ?? "0"}</td>
-                        <td className="py-3 font-mono text-xs">{p.referral_code ?? "—"}</td>
-                        <td className="py-3 text-muted-foreground text-xs">{new Date(p.created_at).toLocaleDateString()}</td>
+                         <td className="py-3 font-mono text-xs">{p.referral_code ?? "—"}</td>
+                         <td className="py-3 font-mono text-xs text-accent">{getReferralCount(p.user_id)}</td>
+                         <td className="py-3 text-muted-foreground text-xs">{new Date(p.created_at).toLocaleDateString()}</td>
                       </tr>
                     );
                   })}

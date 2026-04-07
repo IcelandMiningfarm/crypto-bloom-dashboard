@@ -211,8 +211,8 @@ const Dashboard = () => {
           </motion.div>
         )}
 
-        {/* Mining Simulator */}
-        <MiningSimulator activePlans={stats.activePlans} miningPower={stats.miningPower} />
+        {/* Mining Monitor */}
+        <MiningMonitor activePlans={stats.activePlans} miningPower={stats.miningPower} />
 
         {/* No Mining Warning */}
         {!hasMining && (

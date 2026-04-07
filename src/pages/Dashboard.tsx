@@ -49,7 +49,7 @@ const MiningPulse = () => (
   </div>
 );
 
-const MiningSimulator = ({ activePlans, miningPower }: { activePlans: number; miningPower: number }) => {
+const MiningMonitor = ({ activePlans, miningPower }: { activePlans: number; miningPower: number }) => {
   const [hashProgress, setHashProgress] = useState(0);
   const [blocksFound, setBlocksFound] = useState(0);
   const [temp, setTemp] = useState(62);

@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Pickaxe, ArrowDownToLine, ArrowUpFromLine,
-  Settings, LogOut, Menu, X, ClipboardList, History, Users, ShieldCheck
+  Settings, LogOut, Menu, X, ClipboardList, History, Users, ShieldCheck, Receipt
 } from "lucide-react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useState } from "react";

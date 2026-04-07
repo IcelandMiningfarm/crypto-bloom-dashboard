@@ -15,6 +15,7 @@ const navItems = [
   { label: "Withdraw", icon: ArrowUpFromLine, path: "/withdraw" },
   { label: "Orders", icon: ClipboardList, path: "/orders" },
   { label: "Earnings History", icon: History, path: "/earnings" },
+  { label: "Transactions", icon: Receipt, path: "/transactions" },
   { label: "Referral", icon: Users, path: "/referral" },
   { label: "Settings", icon: Settings, path: "/settings" },
 ];

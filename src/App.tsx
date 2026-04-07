@@ -14,6 +14,7 @@ import SettingsPage from "./pages/SettingsPage";
 import OrdersPage from "./pages/OrdersPage";
 import ReferralPage from "./pages/ReferralPage";
 import AdminPage from "./pages/AdminPage";
+import TransactionHistory from "./pages/TransactionHistory";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

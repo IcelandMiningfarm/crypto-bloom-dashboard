@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Pickaxe, ArrowDownToLine, ArrowUpFromLine,
-  Settings, LogOut, Menu, X, ClipboardList, History, Users, ShieldCheck
+  Settings, LogOut, Menu, X, ClipboardList, History, Users, ShieldCheck, Receipt
 } from "lucide-react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useState } from "react";
@@ -15,6 +15,7 @@ const navItems = [
   { label: "Withdraw", icon: ArrowUpFromLine, path: "/withdraw" },
   { label: "Orders", icon: ClipboardList, path: "/orders" },
   { label: "Earnings History", icon: History, path: "/earnings" },
+  { label: "Transactions", icon: Receipt, path: "/transactions" },
   { label: "Referral", icon: Users, path: "/referral" },
   { label: "Settings", icon: Settings, path: "/settings" },
 ];

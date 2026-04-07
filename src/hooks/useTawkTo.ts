@@ -2,13 +2,23 @@ import { useEffect } from "react";
 
 const TAWK_SRC = "https://embed.tawk.to/6994b3ee1b1f6f1c33835aa8/";
 
+declare global {
+  interface Window {
+    Tawk_API?: {
+      hideWidget?: () => void;
+      showWidget?: () => void;
+    };
+    Tawk_LoadStart?: Date;
+  }
+}
+
 export const useTawkTo = () => {
   useEffect(() => {
     // Avoid loading twice
     if (document.getElementById("tawk-script")) return;
 
-    (window as any).Tawk_API = (window as any).Tawk_API || {};
-    (window as any).Tawk_LoadStart = new Date();
+    window.Tawk_API = window.Tawk_API || {};
+    window.Tawk_LoadStart = new Date();
 
     const s1 = document.createElement("script");
     s1.id = "tawk-script";
@@ -20,14 +30,14 @@ export const useTawkTo = () => {
 
     return () => {
       // Hide widget when leaving authenticated pages
-      const api = (window as any).Tawk_API;
+      const api = window.Tawk_API;
       if (api?.hideWidget) api.hideWidget();
     };
   }, []);
 
   // Show widget if it was previously hidden
   useEffect(() => {
-    const api = (window as any).Tawk_API;
+    const api = window.Tawk_API;
     if (api?.showWidget) api.showWidget();
   }, []);
 };

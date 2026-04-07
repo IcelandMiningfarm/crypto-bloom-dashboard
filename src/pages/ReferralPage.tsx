@@ -4,7 +4,8 @@ import { Copy, Check, Users, Gift, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { getTableName, supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/DashboardLayout";
 
@@ -12,22 +13,29 @@ const ReferralPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [referralCode, setReferralCode] = useState("");
-  const [referrals, setReferrals] = useState<any[]>([]);
+  const [referrals, setReferrals] = useState<Tables<"referrals">[]>([]);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [origin, setOrigin] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setOrigin(window.location.origin);
+    }
+  }, []);
 
   useEffect(() => {
     if (!user) return;
     const load = async () => {
       const { data: profile } = await supabase
-        .from("profiles")
+        .from(getTableName("profiles"))
         .select("referral_code")
         .eq("user_id", user.id)
         .single();
       setReferralCode(profile?.referral_code ?? "");
 
       const { data: refs } = await supabase
-        .from("referrals")
+        .from(getTableName("referrals"))
         .select("*")
         .eq("referrer_id", user.id)
         .order("created_at", { ascending: false });
@@ -37,7 +45,7 @@ const ReferralPage = () => {
     load();
   }, [user]);
 
-  const referralLink = `${window.location.origin}?ref=${referralCode}`;
+  const referralLink = origin ? `${origin}?ref=${referralCode}` : "";
   const totalEarned = referrals.reduce((sum, r) => sum + Number(r.bonus_amount), 0);
 
   const handleCopy = (text: string) => {

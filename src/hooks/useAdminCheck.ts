@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { getTableName, supabase } from "@/integrations/supabase/client";
 
 export const useAdminCheck = () => {
   const { user } = useAuth();
@@ -11,7 +11,7 @@ export const useAdminCheck = () => {
     if (!user) { setIsAdmin(false); setLoading(false); return; }
     const check = async () => {
       const { data } = await supabase
-        .from("user_roles")
+        .from(getTableName("user_roles"))
         .select("role")
         .eq("user_id", user.id)
         .eq("role", "admin")

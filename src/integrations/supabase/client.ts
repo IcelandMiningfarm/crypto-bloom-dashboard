@@ -2,16 +2,33 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const SUPABASE_URL = process.env.SUPABASE_URL ?? '';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY ?? '';
+const TABLE_ENV_MAP: Record<string, string | undefined> = {
+  DEPOSITS: process.env.SUPABASE_TABLE_DEPOSITS,
+  EARNINGS_HISTORY: process.env.SUPABASE_TABLE_EARNINGS_HISTORY,
+  PROFILES: process.env.SUPABASE_TABLE_PROFILES,
+  REFERRALS: process.env.SUPABASE_TABLE_REFERRALS,
+  USER_BALANCES: process.env.SUPABASE_TABLE_USER_BALANCES,
+  USER_PURCHASES: process.env.SUPABASE_TABLE_USER_PURCHASES,
+  USER_ROLES: process.env.SUPABASE_TABLE_USER_ROLES,
+  WITHDRAWALS: process.env.SUPABASE_TABLE_WITHDRAWALS,
+};
+
+type TableName = keyof Database["public"]["Tables"];
+
+export const getTableName = <T extends TableName>(logical: T): T => {
+  const key = logical.toUpperCase().replace(/[^A-Z0-9]+/g, '_');
+  return (TABLE_ENV_MAP[key] ?? logical) as T;
+};
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
-    storage: localStorage,
-    persistSession: true,
-    autoRefreshToken: true,
+    storage: typeof window !== "undefined" ? window.localStorage : undefined,
+    persistSession: typeof window !== "undefined",
+    autoRefreshToken: typeof window !== "undefined",
   }
 });

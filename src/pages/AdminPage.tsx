@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
-import { supabase } from "@/integrations/supabase/client";
+import { getTableName, supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/DashboardLayout";
 
@@ -27,24 +28,24 @@ const AdminPage = () => {
   const { user } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdminCheck();
   const { toast } = useToast();
-  const [profiles, setProfiles] = useState<any[]>([]);
-  const [deposits, setDeposits] = useState<any[]>([]);
-  const [withdrawals, setWithdrawals] = useState<any[]>([]);
-  const [purchases, setPurchases] = useState<any[]>([]);
-  const [balances, setBalances] = useState<any[]>([]);
-  const [referrals, setReferrals] = useState<any[]>([]);
+  const [profiles, setProfiles] = useState<Tables<"profiles">[]>([]);
+  const [deposits, setDeposits] = useState<Tables<"deposits">[]>([]);
+  const [withdrawals, setWithdrawals] = useState<Tables<"withdrawals">[]>([]);
+  const [purchases, setPurchases] = useState<Tables<"user_purchases">[]>([]);
+  const [balances, setBalances] = useState<Tables<"user_balances">[]>([]);
+  const [referrals, setReferrals] = useState<Tables<"referrals">[]>([]);
   const [loading, setLoading] = useState(true);
   const [btcPrice, setBtcPrice] = useState(63000);
 
   const loadAll = async () => {
     setLoading(true);
     const [p, d, w, pu, b, r] = await Promise.all([
-      supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-      supabase.from("deposits").select("*").order("created_at", { ascending: false }),
-      supabase.from("withdrawals").select("*").order("created_at", { ascending: false }),
-      supabase.from("user_purchases").select("*").order("created_at", { ascending: false }),
-      supabase.from("user_balances").select("*"),
-      supabase.from("referrals").select("*"),
+      supabase.from(getTableName("profiles")).select("*").order("created_at", { ascending: false }),
+      supabase.from(getTableName("deposits")).select("*").order("created_at", { ascending: false }),
+      supabase.from(getTableName("withdrawals")).select("*").order("created_at", { ascending: false }),
+      supabase.from(getTableName("user_purchases")).select("*").order("created_at", { ascending: false }),
+      supabase.from(getTableName("user_balances")).select("*"),
+      supabase.from(getTableName("referrals")).select("*"),
     ]);
     setProfiles(p.data ?? []);
     setDeposits(d.data ?? []);
@@ -66,8 +67,8 @@ const AdminPage = () => {
   const getProfile = (userId: string) => profiles.find((p) => p.user_id === userId);
   const getReferralCount = (userId: string) => referrals.filter((r) => r.referrer_id === userId).length;
 
-  const approveDeposit = async (deposit: any) => {
-    const { error } = await supabase.from("deposits").update({ status: "confirmed" }).eq("id", deposit.id);
+  const approveDeposit = async (deposit: Tables<"deposits">) => {
+    const { error } = await supabase.from(getTableName("deposits")).update({ status: "confirmed" }).eq("id", deposit.id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
 
     // Credit user balance — convert USD amount to BTC using live price
@@ -78,50 +79,50 @@ const AdminPage = () => {
       // All deposits are converted to BTC balance
       const btcAmount = Number(deposit.amount) / currentPrice;
       const newBtcBalance = Number(bal.btc_balance) + btcAmount;
-      await supabase.from("user_balances").update({
+      await supabase.from(getTableName("user_balances")).update({
         btc_balance: newBtcBalance,
         updated_at: new Date().toISOString(),
       }).eq("user_id", deposit.user_id);
     }
 
     // Activate any pending purchases for this user
-    await supabase.from("user_purchases").update({ status: "active" }).eq("user_id", deposit.user_id).eq("status", "pending");
+    await supabase.from(getTableName("user_purchases")).update({ status: "active" }).eq("user_id", deposit.user_id).eq("status", "pending");
 
     toast({ title: "Deposit approved", description: `$${deposit.amount} converted to ₿${(Number(deposit.amount) / btcPrice).toFixed(8)} and credited` });
     loadAll();
   };
 
   const rejectDeposit = async (id: string) => {
-    await supabase.from("deposits").update({ status: "rejected" }).eq("id", id);
+    await supabase.from(getTableName("deposits")).update({ status: "rejected" }).eq("id", id);
     toast({ title: "Deposit rejected" });
     loadAll();
   };
 
-  const approveWithdrawal = async (withdrawal: any) => {
+  const approveWithdrawal = async (withdrawal: Tables<"withdrawals">) => {
     // Deduct the BTC from user balance first
     const bal = getBalance(withdrawal.user_id);
     if (bal) {
       const newBtcBalance = Math.max(0, Number(bal.btc_balance) - Number(withdrawal.amount));
-      await supabase.from("user_balances").update({
+      await supabase.from(getTableName("user_balances")).update({
         btc_balance: newBtcBalance,
         updated_at: new Date().toISOString(),
       }).eq("user_id", withdrawal.user_id);
     }
 
-    const { error } = await supabase.from("withdrawals").update({ status: "approved" }).eq("id", withdrawal.id);
+    const { error } = await supabase.from(getTableName("withdrawals")).update({ status: "approved" }).eq("id", withdrawal.id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Withdrawal approved", description: `${withdrawal.amount} BTC deducted from user balance` });
     loadAll();
   };
 
   const rejectWithdrawal = async (id: string) => {
-    await supabase.from("withdrawals").update({ status: "rejected" }).eq("id", id);
+    await supabase.from(getTableName("withdrawals")).update({ status: "rejected" }).eq("id", id);
     toast({ title: "Withdrawal rejected" });
     loadAll();
   };
 
   const activatePlan = async (id: string) => {
-    await supabase.from("user_purchases").update({ status: "active" }).eq("id", id);
+    await supabase.from(getTableName("user_purchases")).update({ status: "active" }).eq("id", id);
     toast({ title: "Plan activated" });
     loadAll();
   };

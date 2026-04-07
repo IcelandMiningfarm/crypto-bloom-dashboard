@@ -4,9 +4,11 @@ import { User, Shield, Key } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { getTableName, supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/DashboardLayout";
+
+const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : "Unexpected error";
 
 const SettingsPage = () => {
   const { user } = useAuth();
@@ -22,7 +24,7 @@ const SettingsPage = () => {
     setEmail(user.email ?? "");
     const load = async () => {
       const { data } = await supabase
-        .from("profiles")
+        .from(getTableName("profiles"))
         .select("username")
         .eq("user_id", user.id)
         .single();
@@ -36,13 +38,13 @@ const SettingsPage = () => {
     setSaving(true);
     try {
       const { error } = await supabase
-        .from("profiles")
+        .from(getTableName("profiles"))
         .update({ username })
         .eq("user_id", user.id);
       if (error) throw error;
       toast({ title: "Profile updated" });
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -60,8 +62,8 @@ const SettingsPage = () => {
       toast({ title: "Password updated" });
       setCurrentPassword("");
       setNewPassword("");
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
     } finally {
       setSaving(false);
     }

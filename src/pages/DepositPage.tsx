@@ -1,23 +1,28 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
+import type { RealtimePostgresUpdatePayload } from "@supabase/supabase-js";
 import { Copy, Check, Clock, CheckCircle2, Receipt } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { getTableName, supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 import DashboardLayout from "@/components/DashboardLayout";
 
+const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : "Unexpected error";
+
 const DepositPage = () => {
-  const location = useLocation();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
   const [selectedCrypto, setSelectedCrypto] = useState<"BTC" | "USDT" | "ETH" | "XRP" | "BNB">("BTC");
   const [amount, setAmount] = useState("");
-  const [deposits, setDeposits] = useState<any[]>([]);
+  const [deposits, setDeposits] = useState<Tables<"deposits">[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [btcPrice, setBtcPrice] = useState(63000);
   const [showReceipt, setShowReceipt] = useState(false);
@@ -50,11 +55,25 @@ const DepositPage = () => {
   } | null>(null);
 
   useEffect(() => {
-    const state = location.state as {
-      planName?: string; planPrice?: number; planType?: string; planDuration?: string;
-      dailyEarning?: number; durationDays?: number;
-    } | null;
-    if (state?.planName) {
+    if (!searchParams) return;
+
+    const planName = searchParams.get("planName");
+    const planPrice = searchParams.get("planPrice");
+    const planType = searchParams.get("planType");
+    const planDuration = searchParams.get("planDuration");
+    const dailyEarning = searchParams.get("dailyEarning");
+    const durationDays = searchParams.get("durationDays");
+
+    if (planName) {
+      const state = {
+        planName,
+        planPrice: planPrice ? Number(planPrice) : undefined,
+        planType: planType ?? undefined,
+        planDuration: planDuration ?? undefined,
+        dailyEarning: dailyEarning ? Number(dailyEarning) : undefined,
+        durationDays: durationDays ? Number(durationDays) : undefined,
+      };
+
       setPlanInfo(state);
       setSelectedCrypto(state.planType === "USDT" ? "USDT" : state.planType === "ETH" ? "ETH" : state.planType === "XRP" ? "XRP" : state.planType === "BNB" ? "BNB" : "BTC");
       setAmount(String(state.planPrice ?? ""));
@@ -62,16 +81,16 @@ const DepositPage = () => {
         title: `📋 ${state.planName} selected`,
         description: `Deposit $${state.planPrice?.toLocaleString()} in ${state.planType} to activate your ${state.planDuration} contract.`,
       });
-      window.history.replaceState({}, document.title);
+      router.replace("/deposit");
     }
-  }, []);
+  }, [router, searchParams, toast]);
 
   // Load deposits
   useEffect(() => {
     if (!user) return;
     const load = async () => {
       const { data } = await supabase
-        .from("deposits")
+        .from(getTableName("deposits"))
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
@@ -90,8 +109,8 @@ const DepositPage = () => {
           table: 'deposits',
           filter: `user_id=eq.${user.id}`,
         },
-        (payload) => {
-          const updated = payload.new as any;
+        (payload: RealtimePostgresUpdatePayload<Tables<"deposits">>) => {
+          const updated = payload.new;
           // Reload the list
           load();
           if (updated.status === 'confirmed') {
@@ -113,7 +132,7 @@ const DepositPage = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, btcPrice]);
+  }, [user, btcPrice, toast]);
 
   const walletAddresses = {
     BTC: "bc1qgwcsk7ejyq3u5747xa9r49lyn3a3dpk7e2xx26",
@@ -141,7 +160,7 @@ const DepositPage = () => {
     if (!user || !amount || parseFloat(amount) <= 0) return;
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("deposits").insert({
+      const { error } = await supabase.from(getTableName("deposits")).insert({
         user_id: user.id,
         amount: parseFloat(amount),
         currency: selectedCrypto,
@@ -155,7 +174,7 @@ const DepositPage = () => {
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + durationDays);
 
-        await supabase.from("user_purchases").insert({
+        await supabase.from(getTableName("user_purchases")).insert({
           user_id: user.id,
           plan_name: planInfo.planName,
           plan_price: planInfo.planPrice ?? 0,
@@ -169,7 +188,7 @@ const DepositPage = () => {
 
       // Reload deposits
       const { data } = await supabase
-        .from("deposits")
+        .from(getTableName("deposits"))
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
@@ -178,8 +197,8 @@ const DepositPage = () => {
       setPlanInfo(null);
       setShowReceipt(true);
       setLastDeposit({ amount: parseFloat(amount), currency: selectedCrypto, btcEquivalent: parseFloat(amount) / btcPrice });
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }

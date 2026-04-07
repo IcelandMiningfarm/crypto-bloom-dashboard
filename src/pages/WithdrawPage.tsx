@@ -4,11 +4,13 @@ import { ArrowUpFromLine, Clock, CheckCircle2, XCircle, AlertTriangle, Timer } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { getTableName, supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/DashboardLayout";
 
 const PENDING_HOURS = 24;
+const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : "Unexpected error";
 
 const getTimeRemaining = (createdAt: string) => {
   const created = new Date(createdAt).getTime();
@@ -28,7 +30,7 @@ const WithdrawPage = () => {
   const [amount, setAmount] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
   const [balance, setBalance] = useState(0);
-  const [withdrawals, setWithdrawals] = useState<any[]>([]);
+  const [withdrawals, setWithdrawals] = useState<Tables<"withdrawals">[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [, setTick] = useState(0);
 
@@ -42,14 +44,14 @@ const WithdrawPage = () => {
     if (!user) return;
     const load = async () => {
       const { data: bal } = await supabase
-        .from("user_balances")
+        .from(getTableName("user_balances"))
         .select("btc_balance")
         .eq("user_id", user.id)
         .single();
       setBalance(bal?.btc_balance ?? 0);
 
       const { data: withs } = await supabase
-        .from("withdrawals")
+        .from(getTableName("withdrawals"))
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
@@ -66,7 +68,7 @@ const WithdrawPage = () => {
     }
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("withdrawals").insert({
+      const { error } = await supabase.from(getTableName("withdrawals")).insert({
         user_id: user.id,
         amount: parseFloat(amount),
         currency: "BTC",
@@ -78,13 +80,13 @@ const WithdrawPage = () => {
       setAmount("");
       setWalletAddress("");
       const { data } = await supabase
-        .from("withdrawals")
+        .from(getTableName("withdrawals"))
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
       setWithdrawals(data ?? []);
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }

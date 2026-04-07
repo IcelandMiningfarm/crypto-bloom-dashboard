@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Receipt, ArrowDownLeft, ArrowUpRight, Pickaxe, Gift } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { supabase } from "@/integrations/supabase/client";
+import { getTableName, supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 
@@ -27,10 +27,10 @@ const TransactionHistory = () => {
     const load = async () => {
       const [{ data: purchases }, { data: deposits }, { data: withdrawals }, { data: referrals }] =
         await Promise.all([
-          supabase.from("user_purchases").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
-          supabase.from("deposits").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
-          supabase.from("withdrawals").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
-          supabase.from("referrals").select("*").eq("referred_id", user.id).order("created_at", { ascending: false }),
+          supabase.from(getTableName("user_purchases")).select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+          supabase.from(getTableName("deposits")).select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+          supabase.from(getTableName("withdrawals")).select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+          supabase.from(getTableName("referrals")).select("*").eq("referred_id", user.id).order("created_at", { ascending: false }),
         ]);
 
       const txs: Transaction[] = [];

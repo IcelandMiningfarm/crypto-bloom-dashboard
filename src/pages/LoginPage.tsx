@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, Zap, Shield, Coins, ArrowUpRight, User, Gift } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
+import { getTableName, supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
+
+const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : "Unexpected error";
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -17,16 +19,18 @@ const LoginPage = () => {
   const [username, setUsername] = useState("");
   const [referralCode, setReferralCode] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user) navigate("/dashboard", { replace: true });
-  }, [user, navigate]);
+    if (user) router.replace("/dashboard");
+  }, [user, router]);
 
   useEffect(() => {
+    if (!searchParams) return;
+
     const ref = searchParams.get("ref");
     if (ref) {
       setReferralCode(ref);
@@ -56,7 +60,7 @@ const LoginPage = () => {
             // Small delay to ensure the profile trigger has fired
             await new Promise(resolve => setTimeout(resolve, 1000));
             await supabase
-              .from("profiles")
+              .from(getTableName("profiles"))
               .update(updates)
               .eq("user_id", signUpData.user.id);
           }
@@ -65,10 +69,10 @@ const LoginPage = () => {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate("/dashboard");
+        router.push("/dashboard");
       }
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } catch (error: unknown) {
+      toast({ title: "Error", description: getErrorMessage(error), variant: "destructive" });
     } finally {
       setLoading(false);
     }

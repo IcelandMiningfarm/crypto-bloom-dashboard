@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import type { LucideIcon } from "lucide-react";
 import {
   Bitcoin, DollarSign, TrendingUp, Zap, ArrowUpRight, ArrowDownRight,
   BarChart3, ShieldAlert, Pickaxe, Cpu, Thermometer, Fan
 } from "lucide-react";
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, LineChart, Line } from "recharts";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
 import { LiveIndicator } from "@/components/LiveIndicator";
 import { useLiveMiningData } from "@/hooks/useLiveMiningData";
@@ -130,10 +131,22 @@ const MiningMonitor = ({ activePlans, miningPower }: { activePlans: number; mini
 const Dashboard = () => {
   const { user } = useAuth();
   const { stats, activePurchases, chartData, isConnected, btcPrice, hasMining } = useLiveMiningData();
-  const navigate = useNavigate();
+  const router = useRouter();
   const pricePositive = btcPrice.change24h >= 0;
 
-  const statCards = [
+  type StatCard = {
+    label: string;
+    value: number;
+    icon: LucideIcon;
+    glowClass: string;
+    showPulse: boolean;
+    prefix?: string;
+    suffix?: string;
+    decimals: number;
+    subValue?: string;
+  };
+
+  const statCards: StatCard[] = [
     {
       label: "BTC Balance", value: stats.btcBalance, prefix: "₿ ", decimals: 6,
       icon: Bitcoin, glowClass: "glow-accent", showPulse: false,
@@ -226,7 +239,7 @@ const Dashboard = () => {
             <p className="text-muted-foreground text-sm mb-4">
               Purchase a mining plan to start earning BTC or USDT daily.
             </p>
-            <Button onClick={() => navigate("/plans")} className="gradient-primary text-primary-foreground glow-primary">
+            <Button onClick={() => router.push("/plans")} className="gradient-primary text-primary-foreground glow-primary">
               Browse Mining Plans
             </Button>
           </motion.div>
@@ -255,8 +268,8 @@ const Dashboard = () => {
               <div className="text-2xl font-bold text-foreground font-mono tabular-nums">
                 <AnimatedValue value={stat.value} prefix={stat.prefix} suffix={stat.suffix} decimals={stat.decimals} />
               </div>
-              {(stat as any).subValue && (
-                <p className="text-xs text-muted-foreground mt-1 font-mono">{(stat as any).subValue}</p>
+              {stat.subValue && (
+                <p className="text-xs text-muted-foreground mt-1 font-mono">{stat.subValue}</p>
               )}
             </motion.div>
           ))}

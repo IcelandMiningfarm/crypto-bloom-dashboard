@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { getTableName, supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import type { Tables } from "@/integrations/supabase/types";
 
 interface MiningStats {
   btcBalance: number;
@@ -15,6 +16,10 @@ interface ChartPoint {
   earnings: number;
   hashrate: number;
 }
+
+type UserPurchase = Tables<"user_purchases">;
+type Deposit = Tables<"deposits">;
+type Withdrawal = Tables<"withdrawals">;
 
 const fetchBtcPrice = async (): Promise<{ price: number; change24h: number } | null> => {
   try {
@@ -45,9 +50,9 @@ export const useLiveMiningData = () => {
     activePlans: 0,
   });
 
-  const [activePurchases, setActivePurchases] = useState<any[]>([]);
-  const [deposits, setDeposits] = useState<any[]>([]);
-  const [withdrawals, setWithdrawals] = useState<any[]>([]);
+  const [activePurchases, setActivePurchases] = useState<UserPurchase[]>([]);
+  const [deposits, setDeposits] = useState<Deposit[]>([]);
+  const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [chartData, setChartData] = useState<ChartPoint[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [btcPrice, setBtcPrice] = useState({ price: 0, change24h: 0 });
@@ -60,28 +65,28 @@ export const useLiveMiningData = () => {
     const loadData = async () => {
       // Fetch balance
       const { data: balance } = await supabase
-        .from("user_balances")
+        .from(getTableName("user_balances"))
         .select("*")
         .eq("user_id", user.id)
         .single();
 
       // Fetch active purchases
       const { data: purchases } = await supabase
-        .from("user_purchases")
+        .from(getTableName("user_purchases"))
         .select("*")
         .eq("user_id", user.id)
         .eq("status", "active");
 
       // Fetch deposits
       const { data: deps } = await supabase
-        .from("deposits")
+        .from(getTableName("deposits"))
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
       // Fetch withdrawals
       const { data: withs } = await supabase
-        .from("withdrawals")
+        .from(getTableName("withdrawals"))
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });

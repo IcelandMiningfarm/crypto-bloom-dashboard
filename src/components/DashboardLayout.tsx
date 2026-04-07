@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Pickaxe, ArrowDownToLine, ArrowUpFromLine,
   Settings, LogOut, Menu, X, ClipboardList, History, Users, ShieldCheck, Receipt
@@ -23,15 +23,15 @@ const navItems = [
 
 const DashboardLayout = ({ children }: { children: ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const pathname = usePathname();
   const { signOut } = useAuth();
   const { isAdmin } = useAdminCheck();
   useTawkTo();
 
   const handleLogout = async () => {
     await signOut();
-    navigate("/");
+    router.push("/");
   };
 
   return (
@@ -54,11 +54,11 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
 
           <nav className="flex-1 px-3 space-y-1">
             {[...navItems, ...(isAdmin ? [{ label: "Admin Panel", icon: ShieldCheck, path: "/admin" }] : [])].map((item) => {
-              const isActive = location.pathname === item.path;
+              const isActive = pathname === item.path;
               return (
                 <button
                   key={item.path}
-                  onClick={() => { navigate(item.path); setSidebarOpen(false); }}
+                  onClick={() => { router.push(item.path); setSidebarOpen(false); }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                     isActive
                       ? "bg-primary/10 text-primary border border-primary/20"

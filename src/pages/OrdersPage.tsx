@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { History } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { supabase } from "@/integrations/supabase/client";
+import { getTableName, supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface EarningEntry {
@@ -21,7 +21,7 @@ const OrdersPage = () => {
     if (!user) return;
     const load = async () => {
       const { data } = await supabase
-        .from("earnings_history")
+        .from(getTableName("earnings_history"))
         .select("*")
         .eq("user_id", user.id)
         .order("credited_at", { ascending: false })

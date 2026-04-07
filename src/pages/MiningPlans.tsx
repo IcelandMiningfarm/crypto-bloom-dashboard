@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { getTableName, supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, Bitcoin, DollarSign, ShieldCheck, Clock, Cpu, Wallet, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import DashboardLayout from "@/components/DashboardLayout";
 import antminerImg from "@/assets/antminer-s21.png";
+
+const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : "Unexpected error";
 
 // ── BTC Plans ──────────────────────────────────────────────
 const btcPlans = [
@@ -263,7 +265,7 @@ const PlanCard = ({ plan, type, index, onBuy }: PlanCardProps) => (
       </Badge>
       {type === "BTC" ? (
         <motion.img
-          src={antminerImg}
+          src={antminerImg.src}
           alt="Antminer S21"
           className="h-16 mx-auto mb-3 object-contain"
           whileHover={{ scale: 1.1, rotate: 2 }}
@@ -312,7 +314,7 @@ const PlanCard = ({ plan, type, index, onBuy }: PlanCardProps) => (
 
 // ── Main Page ──────────────────────────────────────────────
 const MiningPlans = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [btcPrice, setBtcPrice] = useState(71076.52);
   const [selectedPlan, setSelectedPlan] = useState<{ plan: PlanCardProps["plan"]; type: "BTC" | "USDT" } | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"balance" | "deposit">("balance");
@@ -331,7 +333,7 @@ const MiningPlans = () => {
   const loadBalance = useCallback(async () => {
     if (!user) return;
     const { data } = await supabase
-      .from("user_balances")
+      .from(getTableName("user_balances"))
       .select("btc_balance, usdt_balance")
       .eq("user_id", user.id)
       .single();
@@ -356,7 +358,7 @@ const MiningPlans = () => {
       // Free plan logic
       if (plan.plan.price === 0) {
         const { data: existingFree } = await supabase
-          .from("user_purchases")
+          .from(getTableName("user_purchases"))
           .select("id")
           .eq("user_id", user.id)
           .eq("plan_price", 0)
@@ -371,7 +373,7 @@ const MiningPlans = () => {
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + plan.plan.durationDays);
 
-        const { error } = await supabase.from("user_purchases").insert({
+        const { error } = await supabase.from(getTableName("user_purchases")).insert({
           user_id: user.id,
           plan_name: plan.plan.name,
           plan_price: 0,
@@ -393,8 +395,8 @@ const MiningPlans = () => {
         const price = plan.plan.price;
 
         // Deduct from USDT first, then BTC
-        let usdtDeduct = Math.min(userBalance.usdt, price);
-        let remainingUsd = price - usdtDeduct;
+        const usdtDeduct = Math.min(userBalance.usdt, price);
+        const remainingUsd = price - usdtDeduct;
         let btcDeduct = 0;
         if (remainingUsd > 0 && btcPrice > 0) {
           btcDeduct = remainingUsd / btcPrice;
@@ -407,7 +409,7 @@ const MiningPlans = () => {
 
         // Update balances
         const { error: balError } = await supabase
-          .from("user_balances")
+          .from(getTableName("user_balances"))
           .update({
             usdt_balance: userBalance.usdt - usdtDeduct,
             btc_balance: userBalance.btc - btcDeduct,
@@ -421,7 +423,7 @@ const MiningPlans = () => {
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + plan.plan.durationDays);
 
-        const { error } = await supabase.from("user_purchases").insert({
+        const { error } = await supabase.from(getTableName("user_purchases")).insert({
           user_id: user.id,
           plan_name: plan.plan.name,
           plan_price: plan.plan.price,
@@ -437,19 +439,18 @@ const MiningPlans = () => {
         toast({ title: "✅ Plan purchased!", description: `${plan.plan.name} is now active. Paid from your balance.` });
       } else {
         // Redirect to deposit
-        navigate("/deposit", {
-          state: {
-            planName: plan.plan.name,
-            planPrice: plan.plan.price,
-            planType: plan.type,
-            planDuration: plan.plan.duration,
-            dailyEarning: plan.plan.dailyEarning,
-            durationDays: plan.plan.durationDays,
-          },
+        const query = new URLSearchParams({
+          planName: plan.plan.name,
+          planPrice: String(plan.plan.price),
+          planType: plan.type,
+          planDuration: plan.plan.duration,
+          dailyEarning: String(plan.plan.dailyEarning),
+          durationDays: String(plan.plan.durationDays),
         });
+        router.push(`/deposit?${query.toString()}`);
       }
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
     } finally {
       setPurchasing(false);
     }

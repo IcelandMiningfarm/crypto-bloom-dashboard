@@ -15,10 +15,14 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
+    const getTableName = (logical: string): string => {
+      const key = logical.toUpperCase().replace(/[^A-Z0-9]+/g, "_");
+      return Deno.env.get(`SUPABASE_TABLE_${key}`) || logical;
+    };
 
     // Get all active purchases that haven't expired
     const { data: activePurchases, error: fetchError } = await supabase
-      .from("user_purchases")
+      .from(getTableName("user_purchases"))
       .select("user_id, daily_earning, plan_name, plan_type")
       .eq("status", "active")
       .gt("expires_at", new Date().toISOString());
@@ -52,7 +56,7 @@ Deno.serve(async (req) => {
     for (const [userId, earnings] of Object.entries(earningsByUser)) {
       // Get current balance
       const { data: balance, error: balErr } = await supabase
-        .from("user_balances")
+        .from(getTableName("user_balances"))
         .select("btc_balance, usdt_balance")
         .eq("user_id", userId)
         .single();
@@ -71,7 +75,7 @@ Deno.serve(async (req) => {
       }
 
       const { error: updateErr } = await supabase
-        .from("user_balances")
+        .from(getTableName("user_balances"))
         .update(updates)
         .eq("user_id", userId);
 
@@ -80,7 +84,7 @@ Deno.serve(async (req) => {
         // Log each plan's earning individually for history
         const userPurchases = activePurchases.filter(p => p.user_id === userId);
         for (const purchase of userPurchases) {
-          await supabase.from("earnings_history").insert({
+          await supabase.from(getTableName("earnings_history")).insert({
             user_id: userId,
             amount: purchase.daily_earning,
             plan_name: purchase.plan_name || "Mining Plan",
@@ -91,7 +95,7 @@ Deno.serve(async (req) => {
 
     // Expire plans that have passed their expiration date
     await supabase
-      .from("user_purchases")
+      .from(getTableName("user_purchases"))
       .update({ status: "expired" })
       .eq("status", "active")
       .lte("expires_at", new Date().toISOString());

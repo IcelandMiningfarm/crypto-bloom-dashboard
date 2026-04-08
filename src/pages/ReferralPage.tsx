@@ -52,7 +52,7 @@ const ReferralPage = () => {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Referral Program</h1>
-          <p className="text-muted-foreground text-sm mt-1">Invite friends — you both earn $20 USDT!</p>
+          <p className="text-muted-foreground text-sm mt-1">Invite friends — you both earn $50 USDT!</p>
         </div>
 
         {/* Stats */}
@@ -69,7 +69,7 @@ const ReferralPage = () => {
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card p-5 text-center">
             <Share2 className="h-8 w-8 text-primary mx-auto mb-2" />
-            <p className="text-2xl font-bold text-foreground">$20</p>
+            <p className="text-2xl font-bold text-foreground">$50</p>
             <p className="text-xs text-muted-foreground">Per Referral</p>
           </motion.div>
         </div>
@@ -103,7 +103,7 @@ const ReferralPage = () => {
             <ol className="text-xs text-muted-foreground mt-2 space-y-1 list-decimal list-inside">
               <li>Share your referral code or link with friends</li>
               <li>They sign up using your code</li>
-              <li>You both receive $20 USDT credited to your balances</li>
+              <li>You both receive $50 USDT credited to your balances</li>
             </ol>
           </div>
         </motion.div>

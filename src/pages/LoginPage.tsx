@@ -61,7 +61,7 @@ const LoginPage = () => {
               .eq("user_id", signUpData.user.id);
           }
         }
-        toast({ title: "Account created!", description: "Check your email to confirm your account." });
+        toast({ title: "Registration successful!", description: "Your account has been created. Redirecting to dashboard..." });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
